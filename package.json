@@ -1,18 +1,65 @@
 {
-  "name": "hivefilemanager",
+  "expo": {
+    "name": "HiveFileManagerRN",
+    "slug": "HiveFileManagerRN",
+    "scheme": "hivefilemanager",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.hive.filemanagerrn"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.hive.filemanagerrn",
+      "permissions": [
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ],
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-7561161015961675~1557530926",
+          "iosAppId": "ca-app-pub-7561161015961675~1557530926"
+        }
+      ]
+    ]
+  },
+  "name": "HiveFileManager",
   "version": "1.0.0",
-  "main": "index.js",
   "scripts": {
-    "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web"
+    "android": "expo run:android",
+    "ios": "expo run:ios"
   },
   "dependencies": {
+    "@expo/vector-icons": "^15.0.3",
+    "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~54.0.33",
+    "expo-dev-client": "~6.0.20",
+    "expo-file-system": "~19.0.21",
+    "expo-font": "~14.0.11",
     "expo-status-bar": "~3.0.9",
     "react": "19.1.0",
-    "react-native": "0.81.5"
-  },
-  "private": true
+    "react-native": "0.81.5",
+    "react-native-google-mobile-ads": "^16.3.1",
+    "react-native-safe-area-context": "~5.6.0"
+  }
 }
