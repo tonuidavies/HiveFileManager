@@ -14,15 +14,16 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.tonuiw.HiveFileManager"
+      "bundleIdentifier": "com.app.HExplorer"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
+        
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.tonuiw.HiveFileManager"
+      "package": "com.app.HExplorer"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -35,6 +36,11 @@
           "iosAppId": "ca-app-pub-7561161015961675~1557530926"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "6cd7ac96-9ff9-459d-8d93-e83f0629ce1c"
+      }
+    }
   }
 }
