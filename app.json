@@ -3,30 +3,9 @@
     "name": "HiveFileManager",
     "slug": "HiveFileManager",
     "version": "1.0.0",
-    "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.app.HExplorer"
-    },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-        
-      },
-      "edgeToEdgeEnabled": true,
       "package": "com.app.HExplorer"
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
     },
     "plugins": [
       [
@@ -36,11 +15,6 @@
           "iosAppId": "ca-app-pub-7561161015961675~1557530926"
         }
       ]
-    ],
-    "extra": {
-      "eas": {
-        "projectId": "6cd7ac96-9ff9-459d-8d93-e83f0629ce1c"
-      }
-    }
+    ]
   }
 }
