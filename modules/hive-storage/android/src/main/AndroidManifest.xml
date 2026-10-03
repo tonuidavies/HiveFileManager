@@ -1,0 +1,28 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:tools="http://schemas.android.com/tools">
+
+  <!-- Android 11+: "All files access" (granted once in system settings, then remembered by Android) -->
+  <uses-permission
+    android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+    tools:ignore="ScopedStorage" />
+  <!-- Android 7-10: classic storage permissions (granted once, remembered by Android) -->
+  <uses-permission
+    android:name="android.permission.READ_EXTERNAL_STORAGE"
+    android:maxSdkVersion="32" />
+  <uses-permission
+    android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+    android:maxSdkVersion="29"
+    tools:ignore="ScopedStorage" />
+
+  <application android:requestLegacyExternalStorage="true">
+    <provider
+      android:name="expo.modules.hivestorage.HiveFileProvider"
+      android:authorities="${applicationId}.hivefileprovider"
+      android:exported="false"
+      android:grantUriPermissions="true">
+      <meta-data
+        android:name="android.support.FILE_PROVIDER_PATHS"
+        android:resource="@xml/hive_file_paths" />
+    </provider>
+  </application>
+</manifest>

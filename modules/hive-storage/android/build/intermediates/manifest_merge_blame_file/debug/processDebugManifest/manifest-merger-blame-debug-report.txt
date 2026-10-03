@@ -1,0 +1,53 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    xmlns:tools="http://schemas.android.com/tools"
+4    package="expo.modules.hivestorage" >
+5
+6    <uses-sdk android:minSdkVersion="24" />
+7
+8    <!-- Android 11+: "All files access" (granted once in system settings, then remembered by Android) -->
+9    <uses-permission
+9-->C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:5:3-7:36
+10        android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+10-->C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:6:5-62
+11        tools:ignore="ScopedStorage" />
+11-->C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:7:5-33
+12    <!-- Android 7-10: classic storage permissions (granted once, remembered by Android) -->
+13    <uses-permission
+13-->C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:9:3-11:34
+14        android:name="android.permission.READ_EXTERNAL_STORAGE"
+14-->C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:10:5-60
+15        android:maxSdkVersion="32" />
+15-->C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:11:5-31
+16    <uses-permission
+16-->C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:12:3-15:36
+17        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+17-->C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:13:5-61
+18        android:maxSdkVersion="29"
+18-->C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:14:5-31
+19        tools:ignore="ScopedStorage" />
+19-->C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:15:5-33
+20
+21    <application android:requestLegacyExternalStorage="true" >
+21-->C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:17:3-27:17
+21-->C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:17:16-59
+22        <provider
+22-->C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:18:5-26:16
+23            android:name="expo.modules.hivestorage.HiveFileProvider"
+23-->C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:19:7-63
+24            android:authorities="${applicationId}.hivefileprovider"
+24-->C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:20:7-62
+25            android:exported="false"
+25-->C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:21:7-31
+26            android:grantUriPermissions="true" >
+26-->C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:22:7-41
+27            <meta-data
+27-->C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:23:7-25:51
+28                android:name="android.support.FILE_PROVIDER_PATHS"
+28-->C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:24:9-59
+29                android:resource="@xml/hive_file_paths" />
+29-->C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:25:9-48
+30        </provider>
+31    </application>
+32
+33</manifest>

@@ -1,0 +1,58 @@
+-- Merging decision tree log ---
+manifest
+ADDED from C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:1:1-28:12
+INJECTED from C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:1:1-28:12
+	package
+		INJECTED from C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml
+	xmlns:tools
+		ADDED from C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:2:3-49
+	xmlns:android
+		ADDED from C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:1:11-69
+uses-permission#android.permission.MANAGE_EXTERNAL_STORAGE
+ADDED from C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:5:3-7:36
+	tools:ignore
+		ADDED from C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:7:5-33
+	android:name
+		ADDED from C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:6:5-62
+uses-permission#android.permission.READ_EXTERNAL_STORAGE
+ADDED from C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:9:3-11:34
+	android:maxSdkVersion
+		ADDED from C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:11:5-31
+	android:name
+		ADDED from C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:10:5-60
+uses-permission#android.permission.WRITE_EXTERNAL_STORAGE
+ADDED from C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:12:3-15:36
+	android:maxSdkVersion
+		ADDED from C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:14:5-31
+	tools:ignore
+		ADDED from C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:15:5-33
+	android:name
+		ADDED from C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:13:5-61
+application
+ADDED from C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:17:3-27:17
+	android:requestLegacyExternalStorage
+		ADDED from C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:17:16-59
+provider#expo.modules.hivestorage.HiveFileProvider
+ADDED from C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:18:5-26:16
+	android:grantUriPermissions
+		ADDED from C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:22:7-41
+	android:authorities
+		ADDED from C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:20:7-62
+	android:exported
+		ADDED from C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:21:7-31
+	android:name
+		ADDED from C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:19:7-63
+meta-data#android.support.FILE_PROVIDER_PATHS
+ADDED from C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:23:7-25:51
+	android:resource
+		ADDED from C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:25:9-48
+	android:name
+		ADDED from C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml:24:9-59
+uses-sdk
+INJECTED from C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml
+INJECTED from C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml
+	android:targetSdkVersion
+		INJECTED from C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from C:\DEV\HiveFileManager\modules\hive-storage\android\src\main\AndroidManifest.xml

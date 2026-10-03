@@ -1,18 +1,43 @@
 {
   "expo": {
-    "name": "HiveFileManager",
+    "name": "Hive File Manager",
     "slug": "HiveFileManager",
-    "version": "1.0.0",
+    "scheme": "hivefilemanager",
+    "version": "2.0.0",
+    "orientation": "portrait",
     "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFFFFF"
+    },
     "android": {
-      "package": "com.app.HExplorer"
+      "package": "com.app.HExplorer",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FFFFFF"
+      },
+      "permissions": [
+        "android.permission.MANAGE_EXTERNAL_STORAGE"
+      ],
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
     },
     "plugins": [
       [
         "react-native-google-mobile-ads",
         {
           "androidAppId": "ca-app-pub-7561161015961675~1557530926",
-          "iosAppId": "ca-app-pub-7561161015961675~1557530926"
+          "iosAppId": "ca-app-pub-7561161015961675~1557530926",
+          "delayAppMeasurementInit": true
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow Hive File Manager to use Face ID to unlock the app."
         }
       ]
     ],
