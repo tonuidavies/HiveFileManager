@@ -12,7 +12,7 @@ import LockScreen, { biometricAvailable } from './LockScreen';
 import appJson from '../../app.json';
 
 // Put your privacy policy link here (required by Google Play for apps with ads)
-export const PRIVACY_POLICY_URL = '';
+export const PRIVACY_POLICY_URL = 'https://app.notion.com/p/Policy-document-Hive-Manager-34a704888c2d80dc8989c89645caae6b';
 
 const PACKAGE = appJson.expo?.android?.package || '';
 const VERSION = appJson.expo?.version || '';
