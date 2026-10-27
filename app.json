@@ -4,7 +4,7 @@
     "slug": "HiveFileManager",
     "scheme": "hivefilemanager",
     "version": "3.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -39,7 +39,8 @@
         {
           "faceIDPermission": "Allow Hive File Manager to use Face ID to unlock the app."
         }
-      ]
+      ],
+      "./plugins/withPlayVitalsFixes"
     ],
     "extra": {
       "eas": {
