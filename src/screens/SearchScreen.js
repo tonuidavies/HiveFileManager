@@ -10,12 +10,14 @@ import { useBackHandler, useNav } from '../navigation';
 import { useStore } from '../state/store';
 import { useFileActions } from '../state/useFileActions';
 import * as FS from '../native/HiveStorage';
+import { useT } from '../i18n';
 import { nameOf } from '../utils/files';
 
 const HISTORY_KEY = '@hive_search_history';
 
 export default function SearchScreen({ params }) {
   const t = useTheme();
+  const tx = useT();
   const nav = useNav();
   const insets = useSafeAreaInsets();
   const { settings } = useStore();
@@ -99,7 +101,7 @@ export default function SearchScreen({ params }) {
             value={query}
             onChangeText={onChange}
             autoFocus
-            placeholder={base === FS.ROOT ? 'Search all files' : `Search in ${nameOf(base)}`}
+            placeholder={base === FS.ROOT ? tx('search_all') : tx('search_in', { name: nameOf(base) })}
             placeholderTextColor="rgba(255,255,255,0.7)"
             style={styles.input}
             returnKeyType="search"
@@ -121,14 +123,14 @@ export default function SearchScreen({ params }) {
         history.length ? (
           <View style={{ padding: 16 }}>
             <View style={styles.histHead}>
-              <Text style={[styles.histTitle, { color: t.text }]}>Recent searches</Text>
+              <Text style={[styles.histTitle, { color: t.text }]}>{tx('recent_searches')}</Text>
               <Pressable
                 onPress={() => {
                   setHistory([]);
                   AsyncStorage.removeItem(HISTORY_KEY).catch(() => {});
                 }}
               >
-                <Text style={{ color: t.brand, fontWeight: '700' }}>Clear</Text>
+                <Text style={{ color: t.brand, fontWeight: '700' }}>{tx('clear')}</Text>
               </Pressable>
             </View>
             <View style={styles.histWrap}>
@@ -141,7 +143,7 @@ export default function SearchScreen({ params }) {
             </View>
           </View>
         ) : (
-          <EmptyState icon="text-search" title="Find anything" message="Type at least 2 letters of a file or folder name." />
+          <EmptyState icon="text-search" title={tx('find_anything')} message={tx('type_2_letters')} />
         )
       ) : (
         <FlatList
@@ -153,9 +155,9 @@ export default function SearchScreen({ params }) {
           windowSize={9}
           removeClippedSubviews
           ListHeaderComponent={
-            results.length ? <Text style={[styles.count, { color: t.sub }]}>{results.length >= 400 ? '400+ results' : `${results.length} results`}</Text> : null
+            results.length ? <Text style={[styles.count, { color: t.sub }]}>{results.length >= 400 ? tx('results_400') : tx('results', { count: results.length })}</Text> : null
           }
-          ListEmptyComponent={busy ? null : <EmptyState icon="file-search-outline" title="No results" message={`Nothing named "${query.trim()}" was found.`} />}
+          ListEmptyComponent={busy ? null : <EmptyState icon="file-search-outline" title={tx('no_results')} message={tx('nothing_named', { q: query.trim() })} />}
         />
       )}
     </View>

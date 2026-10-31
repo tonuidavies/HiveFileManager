@@ -9,6 +9,7 @@ import { useAdState } from '../ads/useAds';
 import { ADS_REQUIRED, showPrivacyOptions, suppressAppOpen } from '../ads/AdManager';
 import { useAdFreeFlow } from '../ads/useAdFree';
 import LockScreen, { biometricAvailable } from './LockScreen';
+import { LANGUAGES, resolveLanguage, useT } from '../i18n';
 import appJson from '../../app.json';
 
 // Put your privacy policy link here (required by Google Play for apps with ads)
@@ -20,6 +21,7 @@ const STORE_URL = `https://play.google.com/store/apps/details?id=${PACKAGE}`;
 
 export default function SettingsScreen() {
   const t = useTheme();
+  const tx = useT();
   const nav = useNav();
   const ui = useUI();
   const { settings, update } = useStore();
@@ -36,15 +38,26 @@ export default function SettingsScreen() {
     return true;
   });
 
-  const themeLabel = { system: 'System default', light: 'Light', dark: 'Dark' }[settings.themeMode];
+  const themeLabel = { system: tx('system_default'), light: tx('light'), dark: tx('dark') }[settings.themeMode];
+  const langName = (code) => LANGUAGES.find((l) => l.code === code)?.name || code;
+  const languageLabel = settings.language === 'system' ? `${tx('system_default')} (${langName(resolveLanguage('system'))})` : langName(settings.language);
+
+  const chooseLanguage = () =>
+    ui.sheet({
+      title: tx('language'),
+      actions: [
+        { label: `${tx('system_default')} (${langName(resolveLanguage('system'))})`, icon: 'translate', checked: settings.language === 'system', onPress: () => update({ language: 'system' }) },
+        ...LANGUAGES.map((l) => ({ label: l.name, icon: 'alphabetical-variant', checked: settings.language === l.code, onPress: () => update({ language: l.code }) })),
+      ],
+    });
 
   const chooseTheme = () =>
     ui.sheet({
-      title: 'Theme',
+      title: tx('theme'),
       actions: [
-        { label: 'System default', icon: 'theme-light-dark', checked: settings.themeMode === 'system', onPress: () => update({ themeMode: 'system' }) },
-        { label: 'Light', icon: 'white-balance-sunny', checked: settings.themeMode === 'light', onPress: () => update({ themeMode: 'light' }) },
-        { label: 'Dark', icon: 'weather-night', checked: settings.themeMode === 'dark', onPress: () => update({ themeMode: 'dark' }) },
+        { label: tx('system_default'), icon: 'theme-light-dark', checked: settings.themeMode === 'system', onPress: () => update({ themeMode: 'system' }) },
+        { label: tx('light'), icon: 'white-balance-sunny', checked: settings.themeMode === 'light', onPress: () => update({ themeMode: 'light' }) },
+        { label: tx('dark'), icon: 'weather-night', checked: settings.themeMode === 'dark', onPress: () => update({ themeMode: 'dark' }) },
       ],
     });
 
@@ -53,10 +66,10 @@ export default function SettingsScreen() {
       setSettingPin(true);
       return;
     }
-    const ok = await ui.confirm({ title: 'Turn off app lock?', message: 'Anyone with your phone will be able to open Hive.', confirmText: 'Turn off', destructive: true });
+    const ok = await ui.confirm({ title: tx('app_lock_off_q'), message: tx('app_lock_off_msg'), confirmText: tx('turn_off'), destructive: true });
     if (ok) {
       update({ lockEnabled: false, pin: null });
-      ui.toast('App lock turned off');
+      ui.toast(tx('app_lock_off_toast'));
     }
   };
 
@@ -66,66 +79,67 @@ export default function SettingsScreen() {
 
   const openUrl = (url) => {
     suppressAppOpen();
-    Linking.openURL(url).catch(() => ui.toast('Could not open link'));
+    Linking.openURL(url).catch(() => ui.toast(tx('could_not_open_link')));
   };
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
-      <GradientHeader title="Settings" left={<IconButton name="arrow-left" color="#fff" onPress={() => nav.pop()} />} />
+      <GradientHeader title={tx('settings')} left={<IconButton name="arrow-left" color="#fff" onPress={() => nav.pop()} />} />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
-        <Group title="Appearance">
-          <Row icon="palette-outline" title="Theme" value={themeLabel} onPress={chooseTheme} />
+        <Group title={tx('appearance')}>
+          <Row icon="palette-outline" title={tx('theme')} value={themeLabel} onPress={chooseTheme} />
+          <Row icon="translate" title={tx('language')} value={languageLabel} onPress={chooseLanguage} />
           <Row
             icon={settings.viewMode === 'grid' ? 'view-grid-outline' : 'view-list-outline'}
-            title="Default view"
-            value={settings.viewMode === 'grid' ? 'Grid' : 'List'}
+            title={tx('default_view')}
+            value={settings.viewMode === 'grid' ? tx('grid') : tx('list')}
             onPress={() => update({ viewMode: settings.viewMode === 'grid' ? 'list' : 'grid' })}
           />
         </Group>
 
-        <Group title="Files">
-          <Row icon="eye-outline" title="Show hidden files" text="Files and folders starting with a dot" switchValue={settings.showHidden} onSwitch={(v) => update({ showHidden: v })} />
-          <Row icon="trash-can-outline" title="Use Trash" text="Deleted items can be restored for 30 days" switchValue={settings.useTrash} onSwitch={(v) => update({ useTrash: v })} />
-          <Row icon="help-circle-outline" title="Confirm before deleting" switchValue={settings.confirmDelete} onSwitch={(v) => update({ confirmDelete: v })} />
-          <Row icon="delete-restore" title="Open Trash" onPress={() => nav.push('trash', {})} />
+        <Group title={tx('files')}>
+          <Row icon="eye-outline" title={tx('show_hidden_files')} text={tx('show_hidden_text')} switchValue={settings.showHidden} onSwitch={(v) => update({ showHidden: v })} />
+          <Row icon="trash-can-outline" title={tx('use_trash')} text={tx('use_trash_text')} switchValue={settings.useTrash} onSwitch={(v) => update({ useTrash: v })} />
+          <Row icon="help-circle-outline" title={tx('confirm_delete')} switchValue={settings.confirmDelete} onSwitch={(v) => update({ confirmDelete: v })} />
+          <Row icon="delete-restore" title={tx('open_trash')} onPress={() => nav.push('trash', {})} />
         </Group>
 
-        <Group title="Security">
-          <Row icon="lock-outline" title="App lock" text="Ask for a PIN when opening Hive" switchValue={settings.lockEnabled} onSwitch={toggleLock} />
-          {settings.lockEnabled ? <Row icon="form-textbox-password" title="Change PIN" onPress={() => setSettingPin(true)} /> : null}
+        <Group title={tx('security')}>
+          <Row icon="lock-outline" title={tx('app_lock')} text={tx('app_lock_text')} switchValue={settings.lockEnabled} onSwitch={toggleLock} />
+          {settings.lockEnabled ? <Row icon="form-textbox-password" title={tx('change_pin')} onPress={() => setSettingPin(true)} /> : null}
           {settings.lockEnabled && bio ? (
-            <Row icon="fingerprint" title="Unlock with fingerprint / face" switchValue={settings.biometric} onSwitch={(v) => update({ biometric: v })} />
+            <Row icon="fingerprint" title={tx('unlock_bio')} switchValue={settings.biometric} onSwitch={(v) => update({ biometric: v })} />
           ) : null}
         </Group>
 
-        <Group title="Ads & privacy">
+        <Group title={tx('ads_privacy')}>
           {ready ? (
             <Row
               icon="gift-outline"
-              title={adFree ? 'Ad-free is on' : 'Go ad-free for 1 hour'}
-              text={adFree ? `${adFreeMinutes} min left` : `Watch ${ADS_REQUIRED} short ads`}
+              title={adFree ? tx('adfree_on') : tx('adfree_go')}
+              text={adFree ? tx('min_left', { count: adFreeMinutes }) : tx('watch_n_ads', { count: ADS_REQUIRED })}
               onPress={adFree ? undefined : askAdFree}
             />
           ) : null}
-          {privacyOptionsRequired ? <Row icon="shield-account-outline" title="Ad privacy choices" onPress={showPrivacyOptions} /> : null}
-          {PRIVACY_POLICY_URL ? <Row icon="file-document-outline" title="Privacy policy" onPress={() => openUrl(PRIVACY_POLICY_URL)} /> : null}
+          {privacyOptionsRequired ? <Row icon="shield-account-outline" title={tx('ad_privacy_choices')} onPress={showPrivacyOptions} /> : null}
+          {PRIVACY_POLICY_URL ? <Row icon="file-document-outline" title={tx('privacy_policy')} onPress={() => openUrl(PRIVACY_POLICY_URL)} /> : null}
         </Group>
 
-        <Group title="About">
-          <Row icon="star-outline" title="Rate Hive File Manager" text="Enjoying the app? A 5-star rating helps a lot" onPress={() => {
+        <Group title={tx('about')}>
+          <Row icon="star-outline" title={tx('rate_app')} text={tx('rate_text')} onPress={() => {
               suppressAppOpen();
               Linking.openURL(`market://details?id=${PACKAGE}`).catch(() => openUrl(STORE_URL));
             }}
           />
           <Row
             icon="share-variant-outline"
-            title="Share with friends"
+            title={tx('share_friends')}
             onPress={() => {
               suppressAppOpen();
-              Share.share({ message: `Try Hive File Manager – fast & simple file manager: ${STORE_URL}` }).catch(() => {});
+              Share.share({ message: tx('share_message', { url: STORE_URL }) }).catch(() => {});
             }}
           />
-          <Row icon="information-outline" title="Version" value={VERSION} />
+          <Row icon="information-outline" title={tx('version')} value={VERSION} />
         </Group>
       </ScrollView>
 
@@ -136,7 +150,7 @@ export default function SettingsScreen() {
           onSet={(pin) => {
             update({ pin, lockEnabled: true });
             setSettingPin(false);
-            ui.toast('App lock is on');
+            ui.toast(tx('app_lock_on_toast'));
           }}
         />
       </Modal>

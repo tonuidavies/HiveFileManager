@@ -1,4 +1,5 @@
 import { CATEGORY_COLORS } from '../theme';
+import { currentLanguage, tr } from '../i18n';
 
 const EXT = {
   image: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'heic', 'heif', 'avif'],
@@ -66,24 +67,32 @@ export function formatBytes(bytes = 0, digits = 1) {
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const pad = (n) => (n < 10 ? '0' + n : '' + n);
 
+// Localised "12 Mar" / "12 Mar 2025" (falls back to English month names if Intl is unavailable)
+function dayMonth(d, withYear) {
+  try {
+    return d.toLocaleDateString(currentLanguage(), withYear ? { day: 'numeric', month: 'short', year: 'numeric' } : { day: 'numeric', month: 'short' });
+  } catch {
+    return `${d.getDate()} ${MONTHS[d.getMonth()]}${withYear ? ' ' + d.getFullYear() : ''}`;
+  }
+}
+
 export function formatDate(ms) {
   if (!ms) return '';
   const d = new Date(ms);
   const now = new Date();
   const time = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
   const sameDay = d.toDateString() === now.toDateString();
-  if (sameDay) return `Today ${time}`;
+  if (sameDay) return `${tr('today')} ${time}`;
   const y = new Date(now);
   y.setDate(now.getDate() - 1);
-  if (d.toDateString() === y.toDateString()) return `Yesterday ${time}`;
-  const year = d.getFullYear() === now.getFullYear() ? '' : ` ${d.getFullYear()}`;
-  return `${d.getDate()} ${MONTHS[d.getMonth()]}${year}`;
+  if (d.toDateString() === y.toDateString()) return `${tr('yesterday')} ${time}`;
+  return dayMonth(d, d.getFullYear() !== now.getFullYear());
 }
 
 export function formatFullDate(ms) {
   if (!ms) return '';
   const d = new Date(ms);
-  return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return `${dayMonth(d, true)}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 export const parentOf = (path) => {
@@ -97,8 +106,8 @@ export const joinPath = (dir, name) => (dir.endsWith('/') ? dir + name : `${dir}
 
 export function displayPath(path, root) {
   if (!path) return '';
-  if (path === root) return 'Internal storage';
-  if (path.startsWith(root + '/')) return 'Internal storage/' + path.slice(root.length + 1);
+  if (path === root) return tr('internal_storage');
+  if (path.startsWith(root + '/')) return tr('internal_storage') + '/' + path.slice(root.length + 1);
   return path;
 }
 
@@ -121,14 +130,14 @@ export function sortItems(items, sortBy = 'name', dir = 'asc') {
 }
 
 export const CATEGORIES = [
-  { key: 'images', label: 'Images', icon: 'image-multiple', color: CATEGORY_COLORS.images },
-  { key: 'videos', label: 'Videos', icon: 'play-box-multiple', color: CATEGORY_COLORS.videos },
-  { key: 'audio', label: 'Audio', icon: 'music-box-multiple', color: CATEGORY_COLORS.audio },
-  { key: 'documents', label: 'Documents', icon: 'file-document-multiple', color: CATEGORY_COLORS.documents },
-  { key: 'apks', label: 'APKs', icon: 'android', color: CATEGORY_COLORS.apks },
-  { key: 'archives', label: 'Archives', icon: 'zip-box', color: CATEGORY_COLORS.archives },
-  { key: 'downloads', label: 'Downloads', icon: 'download-circle', color: CATEGORY_COLORS.downloads },
-  { key: 'large', label: 'Large files', icon: 'database', color: CATEGORY_COLORS.large },
+  { key: 'images', labelKey: 'cat_images', label: 'Images', icon: 'image-multiple', color: CATEGORY_COLORS.images },
+  { key: 'videos', labelKey: 'cat_videos', label: 'Videos', icon: 'play-box-multiple', color: CATEGORY_COLORS.videos },
+  { key: 'audio', labelKey: 'cat_audio', label: 'Audio', icon: 'music-box-multiple', color: CATEGORY_COLORS.audio },
+  { key: 'documents', labelKey: 'cat_documents', label: 'Documents', icon: 'file-document-multiple', color: CATEGORY_COLORS.documents },
+  { key: 'apks', labelKey: 'cat_apks', label: 'APKs', icon: 'android', color: CATEGORY_COLORS.apks },
+  { key: 'archives', labelKey: 'cat_archives', label: 'Archives', icon: 'zip-box', color: CATEGORY_COLORS.archives },
+  { key: 'downloads', labelKey: 'cat_downloads', label: 'Downloads', icon: 'download-circle', color: CATEGORY_COLORS.downloads },
+  { key: 'large', labelKey: 'cat_large', label: 'Large files', icon: 'database', color: CATEGORY_COLORS.large },
 ];
 
-export const categoryMeta = (key) => CATEGORIES.find((c) => c.key === key) || { key, label: key, icon: 'folder', color: '#888' };
+export const categoryMeta = (key) => CATEGORIES.find((c) => c.key === key) || { key, labelKey: null, label: key, icon: 'folder', color: '#888' };

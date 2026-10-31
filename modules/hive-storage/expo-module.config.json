@@ -1,6 +1,9 @@
 {
   "platforms": ["android"],
   "android": {
-    "modules": ["expo.modules.hivestorage.HiveStorageModule"]
+    "modules": [
+      "expo.modules.hivestorage.HiveStorageModule",
+      "expo.modules.hivestorage.HiveDuplicatesModule"
+    ]
   }
 }

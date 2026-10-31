@@ -7,12 +7,14 @@ import { useBackHandler, useNav, useScreen } from '../navigation';
 import { useStore } from '../state/store';
 import { useUI } from '../components/Overlays';
 import { TRASH_KEEP_DAYS, deleteFromTrash, listTrash, restoreFromTrash } from '../state/trash';
+import { useT } from '../i18n';
 import { formatBytes, formatDate } from '../utils/files';
 
 const DAY = 24 * 60 * 60 * 1000;
 
 export default function TrashScreen() {
   const t = useTheme();
+  const tx = useT();
   const nav = useNav();
   const ui = useUI();
   const { focused } = useScreen();
@@ -42,30 +44,30 @@ export default function TrashScreen() {
   const targets = () => (selected.size ? items.filter((e) => selected.has(e.id)) : []);
 
   const restore = async (list) => {
-    ui.progress('Restoring…');
+    ui.progress(tx('restoring'));
     const { failed } = await restoreFromTrash(list);
     ui.progress(null);
     setSelected(new Set());
     bumpRefresh();
     load();
-    ui.toast(failed ? `${list.length - failed} restored, ${failed} failed` : `${list.length} restored`);
+    ui.toast(failed ? tx('restored_failed', { done: list.length - failed, failed }) : tx('restored_n', { count: list.length }));
   };
 
   const removeForever = async (list, all) => {
     const ok = await ui.confirm({
-      title: all ? 'Empty Trash?' : `Delete ${list.length} forever?`,
-      message: 'This cannot be undone.',
-      confirmText: 'Delete',
+      title: all ? tx('empty_trash_q') : tx('delete_n_forever', { count: list.length }),
+      message: tx('cannot_undo'),
+      confirmText: tx('delete'),
       destructive: true,
       icon: 'delete-forever',
     });
     if (!ok) return;
-    ui.progress('Deleting…');
+    ui.progress(tx('deleting'));
     await deleteFromTrash(list);
     ui.progress(null);
     setSelected(new Set());
     load();
-    ui.toast('Deleted');
+    ui.toast(tx('deleted'));
   };
 
   const total = (items || []).reduce((s, e) => s + (e.size || 0), 0);
@@ -73,8 +75,8 @@ export default function TrashScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       <GradientHeader
-        title={selected.size ? `${selected.size} selected` : 'Trash'}
-        subtitle={items ? `${items.length} items · ${formatBytes(total)} · kept ${TRASH_KEEP_DAYS} days` : null}
+        title={selected.size ? tx('n_selected', { count: selected.size }) : tx('trash')}
+        subtitle={items ? tx('trash_sub', { items: tx('items', { count: items.length }), size: formatBytes(total), days: tx('days', { count: TRASH_KEEP_DAYS }) }) : null}
         left={<IconButton name={selected.size ? 'close' : 'arrow-left'} color="#fff" onPress={() => (selected.size ? setSelected(new Set()) : nav.pop())} />}
         right={items && items.length ? <IconButton name="delete-sweep" color="#fff" onPress={() => removeForever(items, true)} /> : null}
       />
@@ -85,7 +87,7 @@ export default function TrashScreen() {
           data={items}
           keyExtractor={(e) => e.id}
           contentContainerStyle={{ paddingBottom: 100 }}
-          ListEmptyComponent={<EmptyState icon="trash-can-outline" title="Trash is empty" message="Deleted files stay here for 30 days so you can restore them." />}
+          ListEmptyComponent={<EmptyState icon="trash-can-outline" title={tx('trash_empty')} message={tx('trash_empty_msg')} />}
           renderItem={({ item: e }) => {
             const left = Math.max(0, Math.ceil((e.deletedAt + TRASH_KEEP_DAYS * DAY - Date.now()) / DAY));
             const sel = selected.has(e.id);
@@ -93,10 +95,10 @@ export default function TrashScreen() {
               <Pressable
                 onPress={() => (selected.size ? toggle(e) : ui.sheet({
                   title: e.name,
-                  subtitle: `Deleted ${formatDate(e.deletedAt)}`,
+                  subtitle: tx('deleted_on', { date: formatDate(e.deletedAt) }),
                   actions: [
-                    { label: 'Restore', icon: 'restore', onPress: () => restore([e]) },
-                    { label: 'Delete forever', icon: 'delete-forever', destructive: true, onPress: () => removeForever([e]) },
+                    { label: tx('restore'), icon: 'restore', onPress: () => restore([e]) },
+                    { label: tx('delete_forever'), icon: 'delete-forever', destructive: true, onPress: () => removeForever([e]) },
                   ],
                 }))}
                 onLongPress={() => toggle(e)}
@@ -108,7 +110,7 @@ export default function TrashScreen() {
                     {e.name}
                   </Text>
                   <Text style={[styles.meta, { color: t.sub }]} numberOfLines={1}>
-                    {e.isDir ? 'Folder' : formatBytes(e.size)} · {left} {left === 1 ? 'day' : 'days'} left
+                    {e.isDir ? tx('folder') : formatBytes(e.size)} · {tx('days_left', { count: left })}
                   </Text>
                 </View>
                 {selected.size ? <Icon name={sel ? 'check-circle' : 'checkbox-blank-circle-outline'} size={24} color={sel ? t.brand : t.faint} /> : null}
@@ -121,11 +123,11 @@ export default function TrashScreen() {
         <View style={[styles.bar, { backgroundColor: t.card, borderTopColor: t.border }]}>
           <Pressable style={styles.barBtn} onPress={() => restore(targets())}>
             <Icon name="restore" size={22} color={t.brand} />
-            <Text style={[styles.barText, { color: t.brand }]}>Restore</Text>
+            <Text style={[styles.barText, { color: t.brand }]}>{tx('restore')}</Text>
           </Pressable>
           <Pressable style={styles.barBtn} onPress={() => removeForever(targets())}>
             <Icon name="delete-forever" size={22} color={t.danger} />
-            <Text style={[styles.barText, { color: t.danger }]}>Delete forever</Text>
+            <Text style={[styles.barText, { color: t.danger }]}>{tx('delete_forever')}</Text>
           </Pressable>
         </View>
       ) : null}

@@ -11,17 +11,19 @@ import { useStore } from '../state/store';
 import { useUI } from '../components/Overlays';
 import { useFileActions } from '../state/useFileActions';
 import * as FS from '../native/HiveStorage';
+import { useT } from '../i18n';
 import { categoryMeta, formatBytes } from '../utils/files';
 
 const VISUAL = ['images', 'videos'];
 const SORTS = [
-  { key: 'date', label: 'Newest first', icon: 'calendar-clock' },
-  { key: 'size', label: 'Largest first', icon: 'sort-numeric-descending' },
-  { key: 'name', label: 'Name (A–Z)', icon: 'sort-alphabetical-ascending' },
+  { key: 'date', labelKey: 'sort_newest', icon: 'calendar-clock' },
+  { key: 'size', labelKey: 'sort_largest', icon: 'sort-numeric-descending' },
+  { key: 'name', labelKey: 'sort_name_az', icon: 'sort-alphabetical-ascending' },
 ];
 
 export default function CategoryScreen({ params }) {
   const t = useTheme();
+  const tx = useT();
   const nav = useNav();
   const ui = useUI();
   const { focused } = useScreen();
@@ -29,7 +31,9 @@ export default function CategoryScreen({ params }) {
   const { refreshToken } = useStore();
   const actions = useFileActions();
   const category = params.category;
-  const meta = category === 'recent' ? { label: 'Recent files', color: t.brand } : categoryMeta(category);
+  const rawMeta = category === 'recent' ? { labelKey: 'recent_files', label: '', color: t.brand } : categoryMeta(category);
+  const metaLabel = rawMeta.labelKey ? tx(rawMeta.labelKey) : rawMeta.label;
+  const meta = rawMeta;
 
   const [data, setData] = useState(null);
   const [selected, setSelected] = useState(() => new Set());
@@ -119,8 +123,8 @@ export default function CategoryScreen({ params }) {
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       <GradientHeader
-        title={selecting ? `${selected.size} selected` : meta.label}
-        subtitle={selecting ? formatBytes(selectedItems.reduce((s, i) => s + i.size, 0)) : data ? `${items.length} files · ${formatBytes(totalSize)}` : 'Scanning…'}
+        title={selecting ? tx('n_selected', { count: selected.size }) : metaLabel}
+        subtitle={selecting ? formatBytes(selectedItems.reduce((s, i) => s + i.size, 0)) : data ? `${tx('files', { count: items.length })} · ${formatBytes(totalSize)}` : tx('scanning')}
         left={<IconButton name={selecting ? 'close' : 'arrow-left'} color="#fff" onPress={back} />}
         right={
           selecting ? (
@@ -137,10 +141,10 @@ export default function CategoryScreen({ params }) {
                 color="#fff"
                 onPress={() =>
                   ui.sheet({
-                    title: 'Sort & view',
+                    title: tx('sort_view'),
                     actions: [
-                      ...SORTS.map((s) => ({ label: s.label, icon: s.icon, checked: sortBy === s.key, onPress: () => setSortBy(s.key) })),
-                      { label: grid ? 'List view' : 'Grid view', icon: grid ? 'view-list' : 'view-grid', onPress: () => setGrid(!grid) },
+                      ...SORTS.map((s) => ({ label: tx(s.labelKey), icon: s.icon, checked: sortBy === s.key, onPress: () => setSortBy(s.key) })),
+                      { label: grid ? tx('list_view') : tx('grid_view'), icon: grid ? 'view-list' : 'view-grid', onPress: () => setGrid(!grid) },
                     ],
                   })
                 }
@@ -156,7 +160,7 @@ export default function CategoryScreen({ params }) {
               value={query}
               onChangeText={setQuery}
               autoFocus
-              placeholder={`Filter ${meta.label.toLowerCase()}`}
+              placeholder={tx('filter_placeholder', { name: metaLabel.toLowerCase() })}
               placeholderTextColor="rgba(255,255,255,0.7)"
               style={styles.filterInput}
             />
@@ -185,16 +189,16 @@ export default function CategoryScreen({ params }) {
             maxToRenderPerBatch={18}
             windowSize={9}
             removeClippedSubviews
-            ListEmptyComponent={<EmptyState icon={meta.icon || 'file-search-outline'} title={query ? 'No matches' : `No ${meta.label.toLowerCase()} found`} />}
+            ListEmptyComponent={<EmptyState icon={meta.icon || 'file-search-outline'} title={query ? tx('no_matches') : tx('none_found', { name: metaLabel.toLowerCase() })} />}
           />
         )}
         {selecting ? (
           <View style={[styles.actionBar, { backgroundColor: t.card, borderTopColor: t.border }]}>
-            <Bar icon="share-variant" label="Share" onPress={() => actions.shareItems(selectedItems)} />
-            <Bar icon="content-copy" label="Copy" onPress={() => { actions.toClipboard(selectedItems, 'copy'); setSelected(new Set()); nav.push('browser', { path: FS.ROOT }); }} />
-            <Bar icon="folder-move-outline" label="Move" onPress={() => { actions.toClipboard(selectedItems, 'move'); setSelected(new Set()); nav.push('browser', { path: FS.ROOT }); }} />
-            <Bar icon="zip-box-outline" label="Zip" onPress={() => actions.compress(selectedItems)} />
-            <Bar icon="trash-can-outline" label="Delete" danger onPress={() => actions.deleteItems(selectedItems)} />
+            <Bar icon="share-variant" label={tx('share')} onPress={() => actions.shareItems(selectedItems)} />
+            <Bar icon="content-copy" label={tx('copy')} onPress={() => { actions.toClipboard(selectedItems, 'copy'); setSelected(new Set()); nav.push('browser', { path: FS.ROOT }); }} />
+            <Bar icon="folder-move-outline" label={tx('move')} onPress={() => { actions.toClipboard(selectedItems, 'move'); setSelected(new Set()); nav.push('browser', { path: FS.ROOT }); }} />
+            <Bar icon="zip-box-outline" label={tx('zip')} onPress={() => actions.compress(selectedItems)} />
+            <Bar icon="trash-can-outline" label={tx('delete')} danger onPress={() => actions.deleteItems(selectedItems)} />
           </View>
         ) : null}
       </View>

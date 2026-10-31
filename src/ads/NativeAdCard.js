@@ -4,6 +4,7 @@ import { NativeAd, NativeAdView, NativeAsset, NativeAssetType, NativeMediaView }
 import { AD_UNITS } from './AdManager';
 import { useAdState } from './useAds';
 import { radius, useTheme } from '../theme';
+import { tr, useT } from '../i18n';
 
 /**
  * Native ad styled like the app's own cards, with a clear "Ad" label (required by AdMob).
@@ -11,6 +12,7 @@ import { radius, useTheme } from '../theme';
  */
 function NativeAdCard({ style, showMedia = true }) {
   const t = useTheme();
+  useT();
   const { ready, adFree } = useAdState();
   const [ad, setAd] = useState(null);
 
@@ -47,7 +49,7 @@ function NativeAdCard({ style, showMedia = true }) {
         <View style={styles.texts}>
           <View style={styles.titleRow}>
             <View style={[styles.badge, { backgroundColor: t.folder }]}>
-              <Text style={styles.badgeText}>Ad</Text>
+              <Text style={styles.badgeText}>{tr('ad_badge')}</Text>
             </View>
             <NativeAsset assetType={NativeAssetType.HEADLINE}>
               <Text style={[styles.headline, { color: t.text }]} numberOfLines={1}>

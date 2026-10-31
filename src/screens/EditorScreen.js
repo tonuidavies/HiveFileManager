@@ -7,10 +7,12 @@ import { useUI } from '../components/Overlays';
 import { useStore } from '../state/store';
 import { useFileActions } from '../state/useFileActions';
 import * as FS from '../native/HiveStorage';
+import { useT } from '../i18n';
 import { formatBytes } from '../utils/files';
 
 export default function EditorScreen({ params }) {
   const t = useTheme();
+  const tx = useT();
   const nav = useNav();
   const ui = useUI();
   const { bumpRefresh } = useStore();
@@ -28,7 +30,7 @@ export default function EditorScreen({ params }) {
       })
       .catch(() => {
         setText('');
-        ui.toast('Could not read this file');
+        ui.toast(tx('could_not_read'));
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [item.path]);
@@ -38,15 +40,15 @@ export default function EditorScreen({ params }) {
       await FS.writeText(item.path, text);
       setOriginal(text);
       bumpRefresh();
-      ui.toast('Saved');
+      ui.toast(tx('saved'));
     } catch (e) {
-      ui.alert('Could not save', e?.message);
+      ui.alert(tx('could_not_save'), e?.message);
     }
   };
 
   const close = async () => {
     if (dirty) {
-      const ok = await ui.confirm({ title: 'Discard changes?', message: 'Your edits have not been saved.', confirmText: 'Discard', destructive: true });
+      const ok = await ui.confirm({ title: tx('discard_q'), message: tx('discard_msg'), confirmText: tx('discard'), destructive: true });
       if (!ok) return;
     }
     nav.pop();
@@ -61,7 +63,7 @@ export default function EditorScreen({ params }) {
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       <GradientHeader
         title={item.name}
-        subtitle={dirty ? 'Unsaved changes' : formatBytes(item.size)}
+        subtitle={dirty ? tx('unsaved') : formatBytes(item.size)}
         left={<IconButton name="arrow-left" color="#fff" onPress={close} />}
         right={
           <View style={{ flexDirection: 'row' }}>

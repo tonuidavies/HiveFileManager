@@ -3,6 +3,7 @@ import { ActivityIndicator, Animated, Modal, Pressable, ScrollView, StyleSheet, 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { radius, useTheme } from '../theme';
+import { tr } from '../i18n';
 
 const UIContext = createContext(null);
 export const useUI = () => useContext(UIContext);
@@ -34,7 +35,7 @@ export function UIProvider({ children }) {
   const confirm = useCallback(
     (opts) =>
       new Promise((resolve) => {
-        setDialog({ type: 'confirm', confirmText: 'OK', cancelText: 'Cancel', ...opts, resolve });
+        setDialog({ type: 'confirm', confirmText: tr('ok'), cancelText: tr('cancel'), ...opts, resolve });
       }),
     []
   );
@@ -42,7 +43,7 @@ export function UIProvider({ children }) {
   const alert = useCallback(
     (title, message) =>
       new Promise((resolve) => {
-        setDialog({ type: 'alert', title, message, confirmText: 'OK', resolve });
+        setDialog({ type: 'alert', title, message, confirmText: tr('ok'), resolve });
       }),
     []
   );
@@ -51,7 +52,7 @@ export function UIProvider({ children }) {
     (opts) =>
       new Promise((resolve) => {
         setInputValue(opts.initial || '');
-        setDialog({ type: 'prompt', confirmText: 'OK', cancelText: 'Cancel', ...opts, resolve });
+        setDialog({ type: 'prompt', confirmText: tr('ok'), cancelText: tr('cancel'), ...opts, resolve });
       }),
     []
   );

@@ -13,6 +13,7 @@ import { NavContext, ScreenContainer } from './src/navigation';
 import { hasStorageAccess } from './src/native/HiveStorage';
 import { purgeOldTrash } from './src/state/trash';
 import { initAds, onAppForeground, onColdStartReady } from './src/ads/AdManager';
+import { I18nProvider, tr, useT } from './src/i18n';
 
 import PermissionScreen from './src/screens/PermissionScreen';
 import LockScreen from './src/screens/LockScreen';
@@ -25,6 +26,7 @@ import TrashScreen from './src/screens/TrashScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import ViewerScreen from './src/screens/ViewerScreen';
 import EditorScreen from './src/screens/EditorScreen';
+import DuplicatesScreen from './src/screens/DuplicatesScreen';
 
 const SCREENS = {
   home: HomeScreen,
@@ -32,6 +34,7 @@ const SCREENS = {
   category: CategoryScreen,
   search: SearchScreen,
   cleaner: CleanerScreen,
+  duplicates: DuplicatesScreen,
   trash: TrashScreen,
   settings: SettingsScreen,
   viewer: ViewerScreen,
@@ -131,20 +134,23 @@ function Root() {
   }
 
   return (
-    <ThemeProvider value={theme}>
-      <UIProvider>
-        <StatusBar style="light" />
-        <View style={{ flex: 1, backgroundColor: theme.bg }}>{content}</View>
-      </UIProvider>
-    </ThemeProvider>
+    <I18nProvider language={settings.language}>
+      <ThemeProvider value={theme}>
+        <UIProvider>
+          <StatusBar style="light" />
+          <View style={{ flex: 1, backgroundColor: theme.bg }}>{content}</View>
+        </UIProvider>
+      </ThemeProvider>
+    </I18nProvider>
   );
 }
 
 function Splash({ theme }) {
+  // Rendered before the I18nProvider is mounted, so use the global translator
   return (
     <LinearGradient colors={theme.gradient} style={styles.splash}>
       <Icon name="hexagon-multiple" size={72} color="#fff" />
-      <Text style={styles.splashText}>Hive Files</Text>
+      <Text style={styles.splashText}>{tr('app_short')}</Text>
     </LinearGradient>
   );
 }
@@ -152,6 +158,7 @@ function Splash({ theme }) {
 let keySeq = 0;
 
 function Navigator({ theme }) {
+  const tx = useT();
   const [stack, setStack] = useState([{ key: 'home', name: 'home', params: {} }]);
   const lastBack = useRef(0);
 
@@ -178,11 +185,11 @@ function Navigator({ theme }) {
       const now = Date.now();
       if (now - lastBack.current < 2000) return false; // exit
       lastBack.current = now;
-      ToastAndroid.show('Press back again to exit', ToastAndroid.SHORT);
+      ToastAndroid.show(tx('press_back_exit'), ToastAndroid.SHORT);
       return true;
     });
     return () => sub.remove();
-  }, [pop]);
+  }, [pop, tx]);
 
   const nav = useMemo(() => ({ push, pop, reset, depth }), [push, pop, reset, depth]);
 

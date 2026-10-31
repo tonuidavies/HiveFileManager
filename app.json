@@ -3,7 +3,7 @@
     "name": "Hive File Manager",
     "slug": "HiveFileManager",
     "scheme": "hivefilemanager",
-    "version": "3.0.0",
+    "version": "3.1.0",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",

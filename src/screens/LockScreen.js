@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '../components/UI';
 import { useTheme } from '../theme';
 import { suppressAppOpen } from '../ads/AdManager';
+import { useT } from '../i18n';
 
 const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'bio', '0', 'del'];
 
@@ -24,6 +25,7 @@ export async function biometricAvailable() {
  */
 export default function LockScreen({ mode = 'unlock', pin, biometric, onUnlock, onSet, onCancel, onForgot }) {
   const t = useTheme();
+  const tx = useT();
   const insets = useSafeAreaInsets();
   const [entry, setEntry] = useState('');
   const [first, setFirst] = useState(null);
@@ -35,13 +37,13 @@ export default function LockScreen({ mode = 'unlock', pin, biometric, onUnlock, 
     suppressAppOpen(30 * 1000);
     try {
       const r = await LocalAuthentication.authenticateAsync({
-        promptMessage: 'Unlock Hive Files',
-        cancelLabel: 'Use PIN',
+        promptMessage: tx('lock_prompt'),
+        cancelLabel: tx('use_pin'),
         disableDeviceFallback: true,
       });
       if (r.success) onUnlock && onUnlock();
     } catch {}
-  }, [onUnlock]);
+  }, [onUnlock, tx]);
 
   useEffect(() => {
     if (mode !== 'unlock' || !biometric) return;
@@ -66,7 +68,7 @@ export default function LockScreen({ mode = 'unlock', pin, biometric, onUnlock, 
   const complete = (value) => {
     if (mode === 'unlock') {
       if (value === pin) onUnlock && onUnlock();
-      else fail('Wrong PIN. Try again.');
+      else fail(tx('wrong_pin'));
       return;
     }
     if (!first) {
@@ -78,7 +80,7 @@ export default function LockScreen({ mode = 'unlock', pin, biometric, onUnlock, 
     if (value === first) onSet && onSet(value);
     else {
       setFirst(null);
-      fail('PINs did not match. Start again.');
+      fail(tx('pins_mismatch'));
     }
   };
 
@@ -101,15 +103,15 @@ export default function LockScreen({ mode = 'unlock', pin, biometric, onUnlock, 
   const forgot = async () => {
     suppressAppOpen(60 * 1000);
     try {
-      const r = await LocalAuthentication.authenticateAsync({ promptMessage: 'Verify it’s you to reset the app lock', disableDeviceFallback: false });
+      const r = await LocalAuthentication.authenticateAsync({ promptMessage: tx('verify_reset'), disableDeviceFallback: false });
       if (r.success) onForgot && onForgot();
-      else setError('Verification failed.');
+      else setError(tx('verify_failed'));
     } catch {
-      setError('Set a screen lock on your phone to reset the PIN.');
+      setError(tx('set_screen_lock'));
     }
   };
 
-  const title = mode === 'unlock' ? 'Enter your PIN' : first ? 'Confirm your new PIN' : 'Create a 4-digit PIN';
+  const title = mode === 'unlock' ? tx('enter_pin') : first ? tx('confirm_pin') : tx('create_pin');
 
   return (
     <LinearGradient colors={t.gradient} style={[styles.wrap, { paddingTop: insets.top + 40, paddingBottom: insets.bottom + 20 }]}>
@@ -143,11 +145,11 @@ export default function LockScreen({ mode = 'unlock', pin, biometric, onUnlock, 
 
       {mode === 'set' ? (
         <Pressable onPress={onCancel} style={styles.link}>
-          <Text style={styles.linkText}>Cancel</Text>
+          <Text style={styles.linkText}>{tx('cancel')}</Text>
         </Pressable>
       ) : (
         <Pressable onPress={forgot} style={styles.link}>
-          <Text style={styles.linkText}>Forgot PIN?</Text>
+          <Text style={styles.linkText}>{tx('forgot_pin')}</Text>
         </Pressable>
       )}
     </LinearGradient>

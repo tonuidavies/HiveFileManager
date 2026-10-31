@@ -11,23 +11,25 @@ import { useStore } from '../state/store';
 import { useUI } from '../components/Overlays';
 import { useFileActions } from '../state/useFileActions';
 import * as FS from '../native/HiveStorage';
+import { useT } from '../i18n';
 import { CATEGORIES, formatBytes, nameOf } from '../utils/files';
 
 let cachedSummary = null; // instant render on next visit
 
 const QUICK = [
-  { label: 'Internal', icon: 'cellphone', path: '' },
-  { label: 'Downloads', icon: 'download', path: '/Download' },
-  { label: 'Camera', icon: 'camera', path: '/DCIM/Camera' },
-  { label: 'Screenshots', icon: 'cellphone-screenshot', path: '/Pictures/Screenshots' },
-  { label: 'Documents', icon: 'file-document', path: '/Documents' },
-  { label: 'WhatsApp', icon: 'whatsapp', path: '/Android/media/com.whatsapp/WhatsApp/Media' },
-  { label: 'Music', icon: 'music', path: '/Music' },
-  { label: 'Movies', icon: 'movie-open', path: '/Movies' },
+  { label: 'Internal', labelKey: 'q_internal', icon: 'cellphone', path: '' },
+  { label: 'Downloads', labelKey: 'q_downloads', icon: 'download', path: '/Download' },
+  { label: 'Camera', labelKey: 'q_camera', icon: 'camera', path: '/DCIM/Camera' },
+  { label: 'Screenshots', labelKey: 'q_screenshots', icon: 'cellphone-screenshot', path: '/Pictures/Screenshots' },
+  { label: 'Documents', labelKey: 'q_documents', icon: 'file-document', path: '/Documents' },
+  { label: 'WhatsApp', labelKey: null, icon: 'whatsapp', path: '/Android/media/com.whatsapp/WhatsApp/Media' }, // brand name, not translated
+  { label: 'Music', labelKey: 'q_music', icon: 'music', path: '/Music' },
+  { label: 'Movies', labelKey: 'q_movies', icon: 'movie-open', path: '/Movies' },
 ];
 
 export default function HomeScreen() {
   const t = useTheme();
+  const tx = useT();
   const nav = useNav();
   const ui = useUI();
   const { focused } = useScreen();
@@ -90,13 +92,13 @@ export default function HomeScreen() {
 
   const showFavorites = () => {
     if (!settings.favorites.length) {
-      ui.toast('No favorites yet. Open a folder, tap ⋮ and choose "Add to favorites".');
+      ui.toast(tx('no_favorites'));
       return;
     }
     ui.sheet({
-      title: 'Favorites',
+      title: tx('favorites'),
       actions: settings.favorites.slice(0, 12).map((p) => ({
-        label: nameOf(p) || 'Internal storage',
+        label: nameOf(p) || tx('internal_storage'),
         icon: 'star',
         onPress: () => nav.push('browser', { path: p }),
       })),
@@ -118,7 +120,7 @@ export default function HomeScreen() {
         <View onLayout={(e) => setBaseH(e.nativeEvent.layout.height)}>
         <GradientHeader
           compact
-          title="Hive Files"
+          title={tx('app_short')}
           left={
             <View style={styles.brandMark}>
               <Icon name="hexagon-multiple" size={24} color="#fff" />
@@ -138,9 +140,9 @@ export default function HomeScreen() {
                 <Icon name="cellphone" size={18} color="#fff" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.storageTitle}>Internal storage</Text>
+                <Text style={styles.storageTitle}>{tx('internal_storage')}</Text>
                 <Text style={styles.storageSub}>
-                  {formatBytes(storage.used)} used of {formatBytes(storage.total)}
+                  {tx('storage_used', { used: formatBytes(storage.used), total: formatBytes(storage.total) })}
                 </Text>
               </View>
               <Text style={styles.storagePct}>{Math.round(usedPct * 100)}%</Text>
@@ -149,17 +151,17 @@ export default function HomeScreen() {
               <View style={[styles.barFill, { width: `${Math.max(3, usedPct * 100)}%` }]} />
             </View>
             <View style={styles.storageBottom}>
-              <Text style={styles.storageFree}>{formatBytes(storage.free)} free</Text>
+              <Text style={styles.storageFree}>{tx('storage_free', { size: formatBytes(storage.free) })}</Text>
               <Pressable style={styles.cleanPill} onPress={() => nav.push('cleaner', {})} hitSlop={6}>
                 <Icon name="broom" size={14} color={t.brand} />
-                <Text style={[styles.cleanText, { color: t.brand }]}>Clean up</Text>
+                <Text style={[styles.cleanText, { color: t.brand }]}>{tx('clean_up')}</Text>
               </Pressable>
             </View>
           </Pressable>
         </GradientHeader>
 
         {/* Categories (2 rows) */}
-        <SectionTitle compact title="Categories" />
+        <SectionTitle compact title={tx('categories')} />
         <View style={styles.grid}>
           {CATEGORIES.map((c) => {
             const info = cats[c.key];
@@ -173,7 +175,7 @@ export default function HomeScreen() {
                   <Icon name={c.icon} size={24} color={c.color} />
                 </View>
                 <Text style={[styles.catLabel, { color: t.text }]} numberOfLines={1}>
-                  {c.label}
+                  {tx(c.labelKey)}
                 </Text>
                 <Text style={[styles.catMeta, { color: t.sub }]} numberOfLines={1}>
                   {info ? formatBytes(info.size, 0) : c.key === 'large' ? '50 MB+' : '…'}
@@ -192,17 +194,18 @@ export default function HomeScreen() {
               style={[styles.chip, { backgroundColor: t.card, borderColor: t.border }]}
             >
               <Icon name={q.icon} size={16} color={t.brand} />
-              <Text style={[styles.chipText, { color: t.text }]}>{q.label}</Text>
+              <Text style={[styles.chipText, { color: t.text }]}>{q.labelKey ? tx(q.labelKey) : q.label}</Text>
             </Pressable>
           ))}
         </ScrollView>
 
         {/* Tools: one row */}
         <View style={styles.tools}>
-          <Tool icon="broom" color="#10B981" label="Cleaner" onPress={() => nav.push('cleaner', {})} />
-          <Tool icon="trash-can-outline" color="#64748B" label="Trash" onPress={() => nav.push('trash', {})} />
-          <Tool icon="star-outline" color="#F5B83D" label="Favorites" onPress={showFavorites} />
-          <Tool icon="clock-outline" color={t.brand} label="Recent" onPress={() => nav.push('category', { category: 'recent' })} />
+          <Tool icon="broom" color="#10B981" label={tx('tool_cleaner')} onPress={() => nav.push('cleaner', {})} />
+          <Tool icon="content-duplicate" color="#EC4899" label={tx('tool_duplicates')} onPress={() => nav.push('duplicates', {})} />
+          <Tool icon="trash-can-outline" color="#64748B" label={tx('tool_trash')} onPress={() => nav.push('trash', {})} />
+          <Tool icon="star-outline" color="#F5B83D" label={tx('favorites')} onPress={showFavorites} />
+          <Tool icon="clock-outline" color={t.brand} label={tx('recent')} onPress={() => nav.push('category', { category: 'recent' })} />
         </View>
 
         </View>
@@ -210,7 +213,7 @@ export default function HomeScreen() {
         {/* Recent files */}
         {showRecent ? (
           <>
-            <SectionTitle compact title="Recent files" action="See all" onAction={() => nav.push('category', { category: 'recent' })} />
+            <SectionTitle compact title={tx('recent_files')} action={tx('see_all')} onAction={() => nav.push('category', { category: 'recent' })} />
             <FlatList
               horizontal
               data={recent}

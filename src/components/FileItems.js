@@ -5,6 +5,7 @@ import { Icon } from './UI';
 import { useTheme } from '../theme';
 import { formatBytes, formatDate, kindOf, kindStyle, toUri } from '../utils/files';
 import { ROOT, getCachedThumb, mediaThumbnail } from '../native/HiveStorage';
+import { tr, useT } from '../i18n';
 
 export const ROW_HEIGHT = 68;
 
@@ -76,14 +77,15 @@ export const FileIcon = memo(function FileIcon({ item, size = 44, rounded = 12 }
 function subtitleOf(item, showPath) {
   if (showPath) {
     const dir = item.path.slice(0, item.path.lastIndexOf('/'));
-    return dir.startsWith(ROOT) ? 'Internal storage' + dir.slice(ROOT.length) : dir;
+    return dir.startsWith(ROOT) ? tr('internal_storage') + dir.slice(ROOT.length) : dir;
   }
-  if (item.isDir) return `${item.count} ${item.count === 1 ? 'item' : 'items'}  ·  ${formatDate(item.mtime)}`;
+  if (item.isDir) return `${tr('items', { count: item.count })}  ·  ${formatDate(item.mtime)}`;
   return `${formatBytes(item.size)}  ·  ${formatDate(item.mtime)}`;
 }
 
 export const FileRow = memo(function FileRow({ item, selected, selecting, favorite, showPath, onPress, onLongPress, onMore }) {
   const t = useTheme();
+  useT(); // re-render when the language changes
   return (
     <Pressable
       onPress={() => onPress(item)}

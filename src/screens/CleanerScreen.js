@@ -10,17 +10,19 @@ import { useBackHandler, useNav, useScreen } from '../navigation';
 import { useStore } from '../state/store';
 import { useUI } from '../components/Overlays';
 import * as FS from '../native/HiveStorage';
+import { useT } from '../i18n';
 import { formatBytes } from '../utils/files';
 
 const GROUPS = [
-  { key: 'junk', title: 'Junk & temporary files', icon: 'delete-sweep', color: '#F97316', text: 'Temp files, logs, thumbnail cache and empty files', preselect: true },
-  { key: 'empty', title: 'Empty folders', icon: 'folder-remove-outline', color: '#EAB308', text: 'Folders with nothing inside', preselect: true },
-  { key: 'apks', title: 'APK installers', icon: 'android', color: '#10B981', text: 'Install files you probably no longer need', preselect: false },
-  { key: 'large', title: 'Large files (100 MB+)', icon: 'database', color: '#EF4444', text: 'Review before deleting', preselect: false },
+  { key: 'junk', titleKey: 'group_junk', icon: 'delete-sweep', color: '#F97316', preselect: true },
+  { key: 'empty', titleKey: 'group_empty', icon: 'folder-remove-outline', color: '#EAB308', preselect: true },
+  { key: 'apks', titleKey: 'group_apks', icon: 'android', color: '#10B981', preselect: false },
+  { key: 'large', titleKey: 'group_large', icon: 'database', color: '#EF4444', preselect: false },
 ];
 
 export default function CleanerScreen() {
   const t = useTheme();
+  const tx = useT();
   const nav = useNav();
   const ui = useUI();
   const { focused } = useScreen();
@@ -84,14 +86,14 @@ export default function CleanerScreen() {
   const clean = async () => {
     if (!selectedItems.length) return;
     const ok = await ui.confirm({
-      title: `Clean ${formatBytes(selectedSize)}?`,
-      message: `${selectedItems.length} selected items will be permanently deleted.`,
-      confirmText: 'Clean now',
+      title: tx('clean_confirm_title', { size: formatBytes(selectedSize) }),
+      message: tx('clean_confirm_msg', { items: tx('items', { count: selectedItems.length }) }),
+      confirmText: tx('clean_now'),
       destructive: true,
       icon: 'broom',
     });
     if (!ok) return;
-    ui.progress('Cleaning…');
+    ui.progress(tx('cleaning'));
     let size = 0;
     for (const it of selectedItems) {
       try {
@@ -110,25 +112,25 @@ export default function CleanerScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
-      <GradientHeader title="Cleaner" left={<IconButton name="arrow-left" color="#fff" onPress={() => nav.pop()} />} right={<IconButton name="refresh" color="#fff" onPress={scan} />}>
+      <GradientHeader title={tx('cleaner')} left={<IconButton name="arrow-left" color="#fff" onPress={() => nav.pop()} />} right={<IconButton name="refresh" color="#fff" onPress={scan} />}>
         <View style={styles.hero}>
           {freed !== null ? (
             <>
               <Icon name="check-decagram" size={64} color="#fff" />
               <Text style={styles.heroBig}>{formatBytes(freed)}</Text>
-              <Text style={styles.heroSub}>freed up. Your phone is cleaner!</Text>
+              <Text style={styles.heroSub}>{tx('cleaner_freed')}</Text>
             </>
           ) : result ? (
             <>
               <Text style={styles.heroBig}>{formatBytes(selectedSize)}</Text>
-              <Text style={styles.heroSub}>selected to clean</Text>
+              <Text style={styles.heroSub}>{tx('cleaner_selected')}</Text>
             </>
           ) : (
             <>
               <Animated.View style={{ transform: [{ rotate }] }}>
                 <Icon name="loading" size={56} color="#fff" />
               </Animated.View>
-              <Text style={styles.heroSub}>Scanning your storage…</Text>
+              <Text style={styles.heroSub}>{tx('cleaner_scanning')}</Text>
             </>
           )}
         </View>
@@ -137,11 +139,23 @@ export default function CleanerScreen() {
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 120 }}>
         {freed !== null ? (
           <>
-            <PrimaryButton title="Scan again" icon="refresh" onPress={scan} />
+            <PrimaryButton title={tx('scan_again')} icon="refresh" onPress={scan} />
             <NativeAdCard style={{ marginTop: 18 }} />
           </>
         ) : result ? (
           <>
+            <Pressable style={[styles.dupBanner, { backgroundColor: t.card }]} onPress={() => nav.push('duplicates', {})}>
+              <View style={[styles.gIcon, { backgroundColor: '#EC48991F' }]}>
+                <Icon name="content-duplicate" size={22} color="#EC4899" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.gTitle, { color: t.text }]}>{tx('dup_banner_title')}</Text>
+                <Text style={[styles.gText, { color: t.sub }]} numberOfLines={2}>
+                  {tx('dup_banner_text')}
+                </Text>
+              </View>
+              <Icon name="chevron-right" size={22} color={t.faint} />
+            </Pressable>
             {GROUPS.map((g) => {
               const list = result[g.key] || [];
               const size = list.reduce((s, i) => s + (i.size || 0), 0);
@@ -154,9 +168,9 @@ export default function CleanerScreen() {
                       <Icon name={g.icon} size={22} color={g.color} />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={[styles.gTitle, { color: t.text }]}>{g.title}</Text>
+                      <Text style={[styles.gTitle, { color: t.text }]}>{tx(g.titleKey)}</Text>
                       <Text style={[styles.gText, { color: t.sub }]} numberOfLines={1}>
-                        {list.length ? `${list.length} items · ${formatBytes(size)}` : 'Nothing found'}
+                        {list.length ? `${tx('items', { count: list.length })} · ${formatBytes(size)}` : tx('nothing_found')}
                       </Text>
                     </View>
                     {list.length ? (
@@ -180,7 +194,7 @@ export default function CleanerScreen() {
                               {item.name}
                             </Text>
                             <Text style={[styles.itemMeta, { color: t.sub }]} numberOfLines={1}>
-                              {item.isDir ? 'Empty folder' : formatBytes(item.size)}
+                              {item.isDir ? tx('empty_folder') : formatBytes(item.size)}
                             </Text>
                           </View>
                           <Icon name={selected.has(item.path) ? 'check-circle' : 'checkbox-blank-circle-outline'} size={22} color={selected.has(item.path) ? t.brand : t.faint} />
@@ -189,7 +203,7 @@ export default function CleanerScreen() {
                     : null}
                   {list.length ? (
                     <Pressable onPress={() => setOpen((o) => ({ ...o, [g.key]: !o[g.key] }))} style={styles.expand}>
-                      <Text style={{ color: t.brand, fontWeight: '700', fontSize: 13 }}>{expanded ? 'Hide items' : 'Review items'}</Text>
+                      <Text style={{ color: t.brand, fontWeight: '700', fontSize: 13 }}>{expanded ? tx('hide_items') : tx('review_items')}</Text>
                     </Pressable>
                   ) : null}
                 </View>
@@ -202,7 +216,7 @@ export default function CleanerScreen() {
 
       {result && freed === null ? (
         <View style={[styles.footer, { backgroundColor: t.bg }]}>
-          <PrimaryButton title={selectedItems.length ? `Clean ${formatBytes(selectedSize)}` : 'Nothing selected'} icon="broom" disabled={!selectedItems.length} onPress={clean} />
+          <PrimaryButton title={selectedItems.length ? tx('clean_size', { size: formatBytes(selectedSize) }) : tx('nothing_selected')} icon="broom" disabled={!selectedItems.length} onPress={clean} />
         </View>
       ) : null}
       {focused ? <BannerSlot /> : null}
@@ -215,6 +229,7 @@ const styles = StyleSheet.create({
   heroBig: { color: '#fff', fontSize: 40, fontWeight: '800', marginTop: 6 },
   heroSub: { color: 'rgba(255,255,255,0.88)', fontSize: 14, marginTop: 6 },
   group: { borderRadius: radius.lg, marginBottom: 12, overflow: 'hidden' },
+  dupBanner: { flexDirection: 'row', alignItems: 'center', padding: 14, borderRadius: radius.lg, marginBottom: 12 },
   groupHead: { flexDirection: 'row', alignItems: 'center', padding: 14 },
   gIcon: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   gTitle: { fontSize: 15, fontWeight: '700' },

@@ -6,11 +6,12 @@ import { useNav } from '../navigation';
 import { useStore } from './store';
 import { moveToTrash } from './trash';
 import { onTaskCompleted, suppressAppOpen } from '../ads/AdManager';
+import { useT } from '../i18n';
 import { extOf, formatBytes, formatFullDate, isTextEditable, kindOf, parentOf, displayPath } from '../utils/files';
 
-const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
-
 export function useFileActions() {
+  const tx = useT();
+  const plural = useCallback((n) => tx('items', { count: n }), [tx]);
   const ui = useUI();
   const nav = useNav();
   const { settings, toggleFavorite, clipboard, setClipboard, bumpRefresh } = useStore();
@@ -26,26 +27,26 @@ export function useFileActions() {
       try {
         ok = FS.openFile(item.path, mime);
       } catch {}
-      if (!ok) ui.toast('No app found to open this file');
+      if (!ok) ui.toast(tx('no_app'));
     },
-    [ui]
+    [ui, tx]
   );
 
   const extract = useCallback(
     async (item) => {
-      ui.progress('Extracting…');
+      ui.progress(tx('extracting'));
       try {
         const out = await FS.unzip(item.path, parentOf(item.path));
         ui.progress(null);
         bumpRefresh();
-        ui.toast(`Extracted to ${out.slice(out.lastIndexOf('/') + 1)}`);
+        ui.toast(tx('extracted_to', { name: out.slice(out.lastIndexOf('/') + 1) }));
         onTaskCompleted();
       } catch (e) {
         ui.progress(null);
-        ui.alert('Could not extract', e?.message || 'The archive may be damaged or password protected.');
+        ui.alert(tx('could_not_extract'), e?.message || tx('archive_damaged'));
       }
     },
-    [ui, bumpRefresh]
+    [ui, bumpRefresh, tx]
   );
 
   const openItem = useCallback(
@@ -70,15 +71,15 @@ export function useFileActions() {
           title: item.name,
           subtitle: formatBytes(item.size),
           actions: [
-            { label: 'Extract here', icon: 'package-variant', onPress: () => extract(item) },
-            { label: 'Open with another app', icon: 'open-in-new', onPress: () => openExternally(item) },
+            { label: tx('extract_here'), icon: 'package-variant', onPress: () => extract(item) },
+            { label: tx('open_other_app'), icon: 'open-in-new', onPress: () => openExternally(item) },
           ],
         });
         return;
       }
       openExternally(item);
     },
-    [nav, ui, extract, openExternally]
+    [nav, ui, extract, openExternally, tx]
   );
 
   const deleteItems = useCallback(
@@ -87,19 +88,19 @@ export function useFileActions() {
       const toTrash = settings.useTrash && !permanent;
       if (settings.confirmDelete || !toTrash) {
         const ok = await ui.confirm({
-          title: toTrash ? `Move ${plural(items.length, 'item')} to Trash?` : `Delete ${plural(items.length, 'item')} forever?`,
+          title: toTrash ? tx('move_trash_q', { items: plural(items.length) }) : tx('delete_forever_q', { items: plural(items.length) }),
           message: toTrash
-            ? 'You can restore them from Trash for 30 days.'
+            ? tx('restore_30_days')
             : items.length === 1
-              ? `"${items[0].name}" will be permanently deleted.`
-              : 'These items will be permanently deleted. This cannot be undone.',
-          confirmText: toTrash ? 'Move to Trash' : 'Delete',
+              ? tx('delete_one_msg', { name: items[0].name })
+              : tx('delete_many_msg'),
+          confirmText: toTrash ? tx('move_to_trash') : tx('delete'),
           destructive: true,
           icon: toTrash ? 'trash-can-outline' : 'delete-forever',
         });
         if (!ok) return false;
       }
-      ui.progress(toTrash ? 'Moving to Trash…' : 'Deleting…');
+      ui.progress(toTrash ? tx('moving_trash') : tx('deleting'));
       let failed = 0;
       if (toTrash) {
         failed = (await moveToTrash(items)).failed;
@@ -115,58 +116,58 @@ export function useFileActions() {
       ui.progress(null);
       bumpRefresh();
       const done = items.length - failed;
-      ui.toast(failed ? `${done} deleted, ${failed} failed` : toTrash ? `${plural(done, 'item')} moved to Trash` : `${plural(done, 'item')} deleted`);
+      ui.toast(failed ? tx('n_deleted_failed', { done, failed }) : toTrash ? tx('items_moved_trash', { items: plural(done) }) : tx('items_deleted', { items: plural(done) }));
       onTaskCompleted();
       return true;
     },
-    [settings.useTrash, settings.confirmDelete, ui, bumpRefresh]
+    [settings.useTrash, settings.confirmDelete, ui, bumpRefresh, tx, plural]
   );
 
   const renameItem = useCallback(
     async (item) => {
-      const name = await ui.prompt({ title: 'Rename', initial: item.name, placeholder: 'New name', confirmText: 'Rename' });
+      const name = await ui.prompt({ title: tx('rename'), initial: item.name, placeholder: tx('new_name'), confirmText: tx('rename') });
       if (!name || name === item.name) return;
       try {
         await FS.rename(item.path, name);
         bumpRefresh();
-        ui.toast('Renamed');
+        ui.toast(tx('renamed'));
       } catch (e) {
-        ui.alert('Could not rename', e?.message);
+        ui.alert(tx('could_not_rename'), e?.message);
       }
     },
-    [ui, bumpRefresh]
+    [ui, bumpRefresh, tx]
   );
 
   const shareItems = useCallback(
     (items) => {
       const files = items.filter((i) => !i.isDir);
       if (!files.length) {
-        ui.toast('Folders can’t be shared. Compress them first.');
+        ui.toast(tx('folders_cant_share'));
         return;
       }
       suppressAppOpen();
       try {
         FS.shareFiles(files.map((f) => f.path));
       } catch {
-        ui.toast('Could not share');
+        ui.toast(tx('could_not_share'));
       }
     },
-    [ui]
+    [ui, tx]
   );
 
   const toClipboard = useCallback(
     (items, mode) => {
       setClipboard({ mode, items });
-      ui.toast(`${plural(items.length, 'item')} ready to ${mode}. Open a folder and tap Paste.`);
+      ui.toast(tx(mode === 'move' ? 'ready_move' : 'ready_copy', { items: plural(items.length) }));
     },
-    [setClipboard, ui]
+    [setClipboard, ui, tx, plural]
   );
 
   const paste = useCallback(
     async (destDir) => {
       if (!clipboard) return;
       const { mode, items } = clipboard;
-      ui.progress(mode === 'move' ? 'Moving…' : 'Copying…');
+      ui.progress(mode === 'move' ? tx('moving') : tx('copying'));
       let failed = 0;
       for (const it of items) {
         try {
@@ -180,10 +181,10 @@ export function useFileActions() {
       setClipboard(null);
       bumpRefresh();
       const done = items.length - failed;
-      ui.toast(failed ? `${done} done, ${failed} failed` : `${plural(done, 'item')} ${mode === 'move' ? 'moved' : 'copied'}`);
+      ui.toast(failed ? tx('n_done_failed', { done, failed }) : tx(mode === 'move' ? 'items_moved' : 'items_copied', { items: plural(done) }));
       onTaskCompleted();
     },
-    [clipboard, ui, setClipboard, bumpRefresh]
+    [clipboard, ui, setClipboard, bumpRefresh, tx, plural]
   );
 
   const compress = useCallback(
@@ -191,9 +192,9 @@ export function useFileActions() {
       if (!items.length) return;
       const dir = parentOf(items[0].path);
       const base = items.length === 1 ? items[0].name.replace(/\.[^.]+$/, '') : 'Archive';
-      const name = await ui.prompt({ title: 'Compress to ZIP', initial: `${base}.zip`, confirmText: 'Compress' });
+      const name = await ui.prompt({ title: tx('compress_to_zip'), initial: `${base}.zip`, confirmText: tx('compress') });
       if (!name) return;
-      ui.progress('Compressing…');
+      ui.progress(tx('compressing'));
       try {
         const out = await FS.zip(
           items.map((i) => i.path),
@@ -201,36 +202,38 @@ export function useFileActions() {
         );
         ui.progress(null);
         bumpRefresh();
-        ui.toast(`Created ${out.slice(out.lastIndexOf('/') + 1)}`);
+        ui.toast(tx('created_x', { name: out.slice(out.lastIndexOf('/') + 1) }));
         onTaskCompleted();
       } catch (e) {
         ui.progress(null);
-        ui.alert('Could not compress', e?.message);
+        ui.alert(tx('could_not_compress'), e?.message);
       }
     },
-    [ui, bumpRefresh]
+    [ui, bumpRefresh, tx]
   );
 
   const showDetails = useCallback(
     async (item) => {
-      ui.progress('Reading details…');
+      ui.progress(tx('reading_details'));
       try {
         const d = await FS.getDetails(item.path);
         ui.progress(null);
         const lines = [
-          `Location: ${displayPath(parentOf(d.path), FS.ROOT)}`,
-          `Size: ${formatBytes(d.size, 2)}`,
-          d.isDir ? `Contains: ${plural(d.files || 0, 'file')}, ${plural(d.folders || 0, 'folder')}` : `Type: ${d.mime || extOf(d.name).toUpperCase() || 'Unknown'}`,
-          `Modified: ${formatFullDate(d.mtime)}`,
-          `Hidden: ${d.name.startsWith('.') ? 'Yes' : 'No'}`,
+          tx('det_location', { v: displayPath(parentOf(d.path), FS.ROOT) }),
+          tx('det_size', { v: formatBytes(d.size, 2) }),
+          d.isDir
+            ? tx('det_contains', { files: tx('files', { count: d.files || 0 }), folders: tx('folders', { count: d.folders || 0 }) })
+            : tx('det_type', { v: d.mime || extOf(d.name).toUpperCase() || tx('unknown') }),
+          tx('det_modified', { v: formatFullDate(d.mtime) }),
+          tx('det_hidden', { v: d.name.startsWith('.') ? tx('yes') : tx('no') }),
         ];
         ui.alert(d.name, lines.join('\n'));
       } catch (e) {
         ui.progress(null);
-        ui.alert('Details unavailable', e?.message);
+        ui.alert(tx('details_unavailable'), e?.message);
       }
     },
-    [ui]
+    [ui, tx]
   );
 
   const showMore = useCallback(
@@ -239,36 +242,36 @@ export function useFileActions() {
       const isZip = !item.isDir && extOf(item.name) === 'zip';
       ui.sheet({
         title: item.name,
-        subtitle: item.isDir ? plural(item.count || 0, 'item') : `${formatBytes(item.size)} · ${formatFullDate(item.mtime)}`,
+        subtitle: item.isDir ? plural(item.count || 0) : `${formatBytes(item.size)} · ${formatFullDate(item.mtime)}`,
         actions: [
-          !item.isDir && { label: 'Open with…', icon: 'open-in-new', onPress: () => openExternally(item, 'chooser') },
-          extra.onSelect && { label: 'Select', icon: 'checkbox-marked-circle-outline', onPress: () => extra.onSelect(item) },
-          !item.isDir && { label: 'Share', icon: 'share-variant', onPress: () => shareItems([item]) },
-          { label: 'Copy', icon: 'content-copy', onPress: () => toClipboard([item], 'copy') },
-          { label: 'Move', icon: 'folder-move-outline', onPress: () => toClipboard([item], 'move') },
-          { label: 'Rename', icon: 'form-textbox', onPress: () => renameItem(item) },
+          !item.isDir && { label: tx('open_with_ellipsis'), icon: 'open-in-new', onPress: () => openExternally(item, 'chooser') },
+          extra.onSelect && { label: tx('select'), icon: 'checkbox-marked-circle-outline', onPress: () => extra.onSelect(item) },
+          !item.isDir && { label: tx('share'), icon: 'share-variant', onPress: () => shareItems([item]) },
+          { label: tx('copy'), icon: 'content-copy', onPress: () => toClipboard([item], 'copy') },
+          { label: tx('move'), icon: 'folder-move-outline', onPress: () => toClipboard([item], 'move') },
+          { label: tx('rename'), icon: 'form-textbox', onPress: () => renameItem(item) },
           isZip
-            ? { label: 'Extract here', icon: 'package-variant', onPress: () => extract(item) }
-            : { label: 'Compress (ZIP)', icon: 'zip-box-outline', onPress: () => compress([item]) },
+            ? { label: tx('extract_here'), icon: 'package-variant', onPress: () => extract(item) }
+            : { label: tx('compress_zip'), icon: 'zip-box-outline', onPress: () => compress([item]) },
           item.isDir && {
-            label: fav ? 'Remove from favorites' : 'Add to favorites',
+            label: fav ? tx('remove_favorite') : tx('add_favorite'),
             icon: fav ? 'star-off-outline' : 'star-outline',
             onPress: () => {
               toggleFavorite(item.path);
-              ui.toast(fav ? 'Removed from favorites' : 'Added to favorites');
+              ui.toast(fav ? tx('removed_favorite') : tx('added_favorite'));
             },
           },
           extra.showInFolder && {
-            label: 'Show in folder',
+            label: tx('show_in_folder'),
             icon: 'folder-search-outline',
             onPress: () => nav.push('browser', { path: parentOf(item.path), highlight: item.path }),
           },
-          { label: 'Details', icon: 'information-outline', onPress: () => showDetails(item) },
-          { label: 'Delete', icon: 'trash-can-outline', destructive: true, onPress: () => deleteItems([item]) },
+          { label: tx('details'), icon: 'information-outline', onPress: () => showDetails(item) },
+          { label: tx('delete'), icon: 'trash-can-outline', destructive: true, onPress: () => deleteItems([item]) },
         ],
       });
     },
-    [settings.favorites, ui, openExternally, shareItems, toClipboard, renameItem, extract, compress, toggleFavorite, nav, showDetails, deleteItems]
+    [settings.favorites, ui, openExternally, shareItems, toClipboard, renameItem, extract, compress, toggleFavorite, nav, showDetails, deleteItems, tx, plural]
   );
 
   return {

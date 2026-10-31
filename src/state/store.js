@@ -9,6 +9,7 @@ const OLD_ROOT_KEY = '@hive_root_final';
 
 export const DEFAULT_SETTINGS = {
   themeMode: 'system', // system | light | dark
+  language: 'system', // system | en | es | fr | ...
   showHidden: false,
   viewMode: 'list', // list | grid
   sortBy: 'name', // name | date | size | type

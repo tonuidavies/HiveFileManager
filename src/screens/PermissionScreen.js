@@ -6,15 +6,17 @@ import { Icon, PrimaryButton } from '../components/UI';
 import { useTheme } from '../theme';
 import { isNativeAvailable, requestStorageAccess } from '../native/HiveStorage';
 import { suppressAppOpen } from '../ads/AdManager';
+import { useT } from '../i18n';
 
 const POINTS = [
-  { icon: 'lightning-bolt', title: 'One-time setup', text: 'Allow once. Android remembers it, so you will not be asked again.' },
-  { icon: 'folder-multiple', title: 'All your files in one place', text: 'Browse photos, videos, documents, downloads and APKs.' },
-  { icon: 'shield-lock', title: 'Private by design', text: 'Your files stay on your phone. Nothing is uploaded.' },
+  { icon: 'lightning-bolt', titleKey: 'perm_1_title', textKey: 'perm_1_text' },
+  { icon: 'folder-multiple', titleKey: 'perm_2_title', textKey: 'perm_2_text' },
+  { icon: 'shield-lock', titleKey: 'perm_3_title', textKey: 'perm_3_text' },
 ];
 
 export default function PermissionScreen({ onGranted }) {
   const t = useTheme();
+  const tx = useT();
   const insets = useSafeAreaInsets();
   const [denied, setDenied] = useState(false);
 
@@ -36,18 +38,18 @@ export default function PermissionScreen({ onGranted }) {
         <View style={styles.logo}>
           <Icon name="folder-open" size={56} color="#fff" />
         </View>
-        <Text style={styles.heroTitle}>Hive File Manager</Text>
-        <Text style={styles.heroSub}>Fast, clean and simple file management</Text>
+        <Text style={styles.heroTitle}>{tx('app_name')}</Text>
+        <Text style={styles.heroSub}>{tx('perm_sub')}</Text>
       </LinearGradient>
       <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
         {POINTS.map((p) => (
-          <View key={p.title} style={styles.point}>
+          <View key={p.titleKey} style={styles.point}>
             <View style={[styles.pointIcon, { backgroundColor: t.selected }]}>
               <Icon name={p.icon} size={22} color={t.brand} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.pointTitle, { color: t.text }]}>{p.title}</Text>
-              <Text style={[styles.pointText, { color: t.sub }]}>{p.text}</Text>
+              <Text style={[styles.pointTitle, { color: t.text }]}>{tx(p.titleKey)}</Text>
+              <Text style={[styles.pointText, { color: t.sub }]}>{tx(p.textKey)}</Text>
             </View>
           </View>
         ))}
@@ -55,16 +57,18 @@ export default function PermissionScreen({ onGranted }) {
         <View style={[styles.note, { backgroundColor: t.card, borderColor: t.border }]}>
           <Icon name="information-outline" size={18} color={t.brand} />
           <Text style={[styles.noteText, { color: t.sub }]}>
-            On the next screen, turn on <Text style={{ fontWeight: '700', color: t.text }}>"Allow access to manage all files"</Text>, then press back.
+            {tx('perm_note_pre')}
+            <Text style={{ fontWeight: '700', color: t.text }}>{tx('perm_note_bold')}</Text>
+            {tx('perm_note_post')}
           </Text>
         </View>
 
-        {denied ? <Text style={[styles.denied, { color: t.danger }]}>Access is needed to show your files. Tap the button to try again.</Text> : null}
+        {denied ? <Text style={[styles.denied, { color: t.danger }]}>{tx('perm_denied')}</Text> : null}
         {!isNativeAvailable ? (
-          <Text style={[styles.denied, { color: t.danger }]}>This build is missing the storage module. Please rebuild the app.</Text>
+          <Text style={[styles.denied, { color: t.danger }]}>{tx('perm_missing_module')}</Text>
         ) : null}
 
-        <PrimaryButton title="Allow access" icon="check-circle" onPress={ask} style={{ marginTop: 20 }} />
+        <PrimaryButton title={tx('allow_access')} icon="check-circle" onPress={ask} style={{ marginTop: 20 }} />
       </ScrollView>
     </View>
   );

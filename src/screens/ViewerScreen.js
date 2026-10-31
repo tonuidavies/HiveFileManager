@@ -5,9 +5,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon, IconButton } from '../components/UI';
 import { useBackHandler, useNav } from '../navigation';
 import { useFileActions } from '../state/useFileActions';
+import { useT } from '../i18n';
 import { formatBytes, toUri } from '../utils/files';
 
 export default function ViewerScreen({ params }) {
+  const tx = useT();
   const nav = useNav();
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
@@ -73,15 +75,15 @@ export default function ViewerScreen({ params }) {
                 {current.name}
               </Text>
               <Text style={styles.sub}>
-                {index + 1} of {items.length} · {formatBytes(current.size)}
+                {tx('x_of_y', { i: index + 1, n: items.length })} · {formatBytes(current.size)}
               </Text>
             </View>
           </View>
           <View style={[styles.bottom, { paddingBottom: insets.bottom + 10 }]}>
-            <Action icon="share-variant" label="Share" onPress={() => actions.shareItems([current])} />
-            <Action icon="open-in-new" label="Open with" onPress={() => actions.openExternally(current, 'chooser')} />
-            <Action icon="information-outline" label="Details" onPress={() => actions.showDetails(current)} />
-            <Action icon="trash-can-outline" label="Delete" onPress={remove} />
+            <Action icon="share-variant" label={tx('share')} onPress={() => actions.shareItems([current])} />
+            <Action icon="open-in-new" label={tx('open_with')} onPress={() => actions.openExternally(current, 'chooser')} />
+            <Action icon="information-outline" label={tx('details')} onPress={() => actions.showDetails(current)} />
+            <Action icon="trash-can-outline" label={tx('delete')} onPress={remove} />
           </View>
         </>
       ) : null}

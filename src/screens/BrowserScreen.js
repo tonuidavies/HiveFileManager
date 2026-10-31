@@ -10,19 +10,21 @@ import { useStore } from '../state/store';
 import { useUI } from '../components/Overlays';
 import { useFileActions } from '../state/useFileActions';
 import * as FS from '../native/HiveStorage';
+import { useT } from '../i18n';
 import { nameOf, sortItems } from '../utils/files';
 
 const dirCache = new Map(); // path -> raw items (instant back navigation)
 
 const SORTS = [
-  { key: 'name', label: 'Name', icon: 'sort-alphabetical-variant' },
-  { key: 'date', label: 'Date modified', icon: 'calendar-clock' },
-  { key: 'size', label: 'Size', icon: 'sort-numeric-variant' },
-  { key: 'type', label: 'Type', icon: 'shape-outline' },
+  { key: 'name', labelKey: 'sort_name', icon: 'sort-alphabetical-variant' },
+  { key: 'date', labelKey: 'sort_date', icon: 'calendar-clock' },
+  { key: 'size', labelKey: 'sort_size', icon: 'sort-numeric-variant' },
+  { key: 'type', labelKey: 'sort_type', icon: 'shape-outline' },
 ];
 
 export default function BrowserScreen({ params }) {
   const t = useTheme();
+  const tx = useT();
   const nav = useNav();
   const ui = useUI();
   const { focused } = useScreen();
@@ -59,11 +61,12 @@ export default function BrowserScreen({ params }) {
         setError(null);
       } catch (e) {
         if (id !== reqId.current) return;
-        setError(e?.message || 'Cannot open this folder');
+        setError(e?.message || tx('cannot_open_msg'));
         setRaw([]);
       }
       if (id === reqId.current) setLoading(false);
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [settings.showHidden]
   );
 
@@ -168,9 +171,9 @@ export default function BrowserScreen({ params }) {
 
   const createNew = async (kind) => {
     const name = await ui.prompt({
-      title: kind === 'folder' ? 'New folder' : 'New file',
-      initial: kind === 'folder' ? 'New folder' : 'New file.txt',
-      confirmText: 'Create',
+      title: kind === 'folder' ? tx('new_folder') : tx('new_file'),
+      initial: kind === 'folder' ? tx('new_folder') : `${tx('new_file')}.txt`,
+      confirmText: tx('create'),
     });
     if (!name) return;
     try {
@@ -178,25 +181,25 @@ export default function BrowserScreen({ params }) {
       else await FS.createFile(current, name);
       dirCache.delete(current);
       load(current, { silent: true });
-      ui.toast(kind === 'folder' ? 'Folder created' : 'File created');
+      ui.toast(kind === 'folder' ? tx('folder_created') : tx('file_created'));
     } catch (e) {
-      ui.alert('Could not create', e?.message);
+      ui.alert(tx('could_not_create'), e?.message);
     }
   };
 
   const showSort = () =>
     ui.sheet({
-      title: 'Sort & view',
+      title: tx('sort_view'),
       actions: [
         ...SORTS.map((s) => ({
-          label: s.label,
+          label: tx(s.labelKey),
           icon: s.icon,
           checked: settings.sortBy === s.key,
-          right: settings.sortBy === s.key ? (settings.sortDir === 'asc' ? 'Ascending' : 'Descending') : null,
+          right: settings.sortBy === s.key ? (settings.sortDir === 'asc' ? tx('ascending') : tx('descending')) : null,
           onPress: () => update(settings.sortBy === s.key ? { sortDir: settings.sortDir === 'asc' ? 'desc' : 'asc' } : { sortBy: s.key, sortDir: s.key === 'name' || s.key === 'type' ? 'asc' : 'desc' }),
         })),
         {
-          label: grid ? 'List view' : 'Grid view',
+          label: grid ? tx('list_view') : tx('grid_view'),
           icon: grid ? 'view-list' : 'view-grid',
           onPress: () => update({ viewMode: grid ? 'list' : 'grid' }),
         },
@@ -206,13 +209,13 @@ export default function BrowserScreen({ params }) {
   const isFav = settings.favorites.includes(current);
   const showMenu = () =>
     ui.sheet({
-      title: nameOf(current) || 'Internal storage',
+      title: nameOf(current) || tx('internal_storage'),
       actions: [
-        { label: 'New folder', icon: 'folder-plus-outline', onPress: () => createNew('folder') },
-        { label: 'New file', icon: 'file-plus-outline', onPress: () => createNew('file') },
-        items.length ? { label: 'Select all', icon: 'checkbox-multiple-marked-outline', onPress: () => setSelected(new Set(items.map((i) => i.path))) } : null,
+        { label: tx('new_folder'), icon: 'folder-plus-outline', onPress: () => createNew('folder') },
+        { label: tx('new_file'), icon: 'file-plus-outline', onPress: () => createNew('file') },
+        items.length ? { label: tx('select_all'), icon: 'checkbox-multiple-marked-outline', onPress: () => setSelected(new Set(items.map((i) => i.path))) } : null,
         {
-          label: settings.showHidden ? 'Hide hidden files' : 'Show hidden files',
+          label: settings.showHidden ? tx('hide_hidden') : tx('show_hidden'),
           icon: settings.showHidden ? 'eye-off-outline' : 'eye-outline',
           onPress: () => {
             dirCache.clear();
@@ -220,14 +223,14 @@ export default function BrowserScreen({ params }) {
           },
         },
         {
-          label: isFav ? 'Remove from favorites' : 'Add to favorites',
+          label: isFav ? tx('remove_favorite') : tx('add_favorite'),
           icon: isFav ? 'star-off-outline' : 'star-outline',
           onPress: () => {
             toggleFavorite(current);
-            ui.toast(isFav ? 'Removed from favorites' : 'Added to favorites');
+            ui.toast(isFav ? tx('removed_favorite') : tx('added_favorite'));
           },
         },
-        { label: 'Refresh', icon: 'refresh', onPress: () => load(current) },
+        { label: tx('refresh'), icon: 'refresh', onPress: () => load(current) },
       ],
     });
 
@@ -235,14 +238,14 @@ export default function BrowserScreen({ params }) {
   const crumbs = useMemo(() => {
     const rel = current.startsWith(FS.ROOT) ? current.slice(FS.ROOT.length) : current;
     const parts = rel.split('/').filter(Boolean);
-    const out = [{ label: 'Internal', path: FS.ROOT }];
+    const out = [{ label: tx('crumb_internal'), path: FS.ROOT }];
     let acc = FS.ROOT;
     parts.forEach((p) => {
       acc += '/' + p;
       out.push({ label: p, path: acc });
     });
     return out;
-  }, [current]);
+  }, [current, tx]);
   const crumbRef = useRef(null);
 
   const jumpTo = (path) => {
@@ -277,8 +280,8 @@ export default function BrowserScreen({ params }) {
     [cellSize, selected, selecting, onPress, onLongPress]
   );
 
-  const title = selecting ? `${selected.size} selected` : nameOf(current) && current !== FS.ROOT ? nameOf(current) : 'Internal storage';
-  const subtitle = selecting ? null : raw ? `${items.length} ${items.length === 1 ? 'item' : 'items'}` : 'Loading…';
+  const title = selecting ? tx('n_selected', { count: selected.size }) : nameOf(current) && current !== FS.ROOT ? nameOf(current) : tx('internal_storage');
+  const subtitle = selecting ? null : raw ? tx('items', { count: items.length }) : tx('loading');
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
@@ -326,7 +329,7 @@ export default function BrowserScreen({ params }) {
         {raw === null ? (
           <ActivityIndicator color={t.brand} style={{ marginTop: 40 }} />
         ) : error ? (
-          <EmptyState icon="folder-alert-outline" title="Can’t open this folder" message={error} />
+          <EmptyState icon="folder-alert-outline" title={tx('cannot_open_folder')} message={error} />
         ) : (
           <FlatList
             key={grid ? `g${columns}` : 'list'}
@@ -348,8 +351,8 @@ export default function BrowserScreen({ params }) {
             ListEmptyComponent={
               <EmptyState
                 icon="folder-open-outline"
-                title="This folder is empty"
-                message={clipboard ? 'Tap Paste to put your items here.' : 'Tap + to create a folder or file.'}
+                title={tx('folder_empty')}
+                message={clipboard ? tx('tap_paste') : tx('tap_plus')}
               />
             }
           />
@@ -357,21 +360,21 @@ export default function BrowserScreen({ params }) {
 
         {selecting ? (
           <View style={[styles.actionBar, { backgroundColor: t.card, borderTopColor: t.border }]}>
-            <BarButton icon="content-copy" label="Copy" onPress={() => { actions.toClipboard(selectedItems, 'copy'); setSelected(new Set()); }} />
-            <BarButton icon="folder-move-outline" label="Move" onPress={() => { actions.toClipboard(selectedItems, 'move'); setSelected(new Set()); }} />
-            <BarButton icon="share-variant" label="Share" onPress={() => actions.shareItems(selectedItems)} />
-            <BarButton icon="trash-can-outline" label="Delete" danger onPress={() => actions.deleteItems(selectedItems)} />
+            <BarButton icon="content-copy" label={tx('copy')} onPress={() => { actions.toClipboard(selectedItems, 'copy'); setSelected(new Set()); }} />
+            <BarButton icon="folder-move-outline" label={tx('move')} onPress={() => { actions.toClipboard(selectedItems, 'move'); setSelected(new Set()); }} />
+            <BarButton icon="share-variant" label={tx('share')} onPress={() => actions.shareItems(selectedItems)} />
+            <BarButton icon="trash-can-outline" label={tx('delete')} danger onPress={() => actions.deleteItems(selectedItems)} />
             <BarButton
               icon="dots-horizontal"
-              label="More"
+              label={tx('more')}
               onPress={() =>
                 ui.sheet({
-                  title: `${selectedItems.length} selected`,
+                  title: tx('n_selected', { count: selectedItems.length }),
                   actions: [
-                    selectedItems.length === 1 && { label: 'Rename', icon: 'form-textbox', onPress: () => actions.renameItem(selectedItems[0]) },
-                    { label: 'Compress (ZIP)', icon: 'zip-box-outline', onPress: () => actions.compress(selectedItems) },
-                    selectedItems.length === 1 && { label: 'Details', icon: 'information-outline', onPress: () => actions.showDetails(selectedItems[0]) },
-                    { label: 'Delete permanently', icon: 'delete-forever', destructive: true, onPress: () => actions.deleteItems(selectedItems, { permanent: true }) },
+                    selectedItems.length === 1 && { label: tx('rename'), icon: 'form-textbox', onPress: () => actions.renameItem(selectedItems[0]) },
+                    { label: tx('compress_zip'), icon: 'zip-box-outline', onPress: () => actions.compress(selectedItems) },
+                    selectedItems.length === 1 && { label: tx('details'), icon: 'information-outline', onPress: () => actions.showDetails(selectedItems[0]) },
+                    { label: tx('delete_permanently'), icon: 'delete-forever', destructive: true, onPress: () => actions.deleteItems(selectedItems, { permanent: true }) },
                   ],
                 })
               }
@@ -381,23 +384,23 @@ export default function BrowserScreen({ params }) {
           <View style={[styles.pasteBar, { backgroundColor: t.card, borderTopColor: t.border }]}>
             <Icon name={clipboard.mode === 'move' ? 'folder-move' : 'content-copy'} size={22} color={t.brand} />
             <Text style={[styles.pasteText, { color: t.text }]} numberOfLines={1}>
-              {clipboard.items.length} {clipboard.items.length === 1 ? 'item' : 'items'} to {clipboard.mode}
+              {tx(clipboard.mode === 'move' ? 'clip_move' : 'clip_copy', { items: tx('items', { count: clipboard.items.length }) })}
             </Text>
             <Pressable onPress={() => setClipboard(null)} style={styles.pasteBtnGhost}>
-              <Text style={{ color: t.sub, fontWeight: '700' }}>Cancel</Text>
+              <Text style={{ color: t.sub, fontWeight: '700' }}>{tx('cancel')}</Text>
             </Pressable>
             <Pressable onPress={() => actions.paste(current)} style={[styles.pasteBtn, { backgroundColor: t.brand }]}>
-              <Text style={{ color: '#fff', fontWeight: '700' }}>Paste here</Text>
+              <Text style={{ color: '#fff', fontWeight: '700' }}>{tx('paste_here')}</Text>
             </Pressable>
           </View>
         ) : (
           <Fab
             onPress={() =>
               ui.sheet({
-                title: 'Create',
+                title: tx('create'),
                 actions: [
-                  { label: 'New folder', icon: 'folder-plus-outline', onPress: () => createNew('folder') },
-                  { label: 'New text file', icon: 'file-plus-outline', onPress: () => createNew('file') },
+                  { label: tx('new_folder'), icon: 'folder-plus-outline', onPress: () => createNew('folder') },
+                  { label: tx('new_text_file'), icon: 'file-plus-outline', onPress: () => createNew('file') },
                 ],
               })
             }
